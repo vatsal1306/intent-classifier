@@ -14,17 +14,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
 import wandb
+from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -175,6 +178,33 @@ def save_confusion_matrix_csv(cm: np.ndarray, id2label: Dict[int, str], out_path
     labels = [id2label[i] for i in sorted(id2label.keys())]
     df = pd.DataFrame(cm, index=[f"true_{l}" for l in labels], columns=[f"pred_{l}" for l in labels])
     df.to_csv(out_path, index=True)
+
+
+def save_classification_report_txt(report_str: str, out_path: Path) -> None:
+    """
+    Saves sklearn's classification_report string into a clean .txt file.
+    """
+    out_path.write_text(report_str.strip() + "\n", encoding="utf-8")
+
+
+def save_confusion_matrix_heatmap(
+        cm: np.ndarray,
+        id2label: Dict[int, str],
+        out_path: Path,
+        title: str = "Confusion Matrix",
+) -> None:
+    """
+    Saves a labeled confusion matrix heatmap as a PNG.
+    """
+    labels = [id2label[i] for i in sorted(id2label.keys())]
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+    disp.plot(ax=ax, cmap="Blues", colorbar=True, values_format="d")
+    ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=200)
+    plt.close(fig)
 
 
 # -----------------------------------
@@ -392,9 +422,9 @@ def main() -> int:
             model.save_pretrained(best_dir)
             tokenizer.save_pretrained(best_dir)
 
-            (out_dir / "best_val_metrics.json").write_text(
-                json.dumps(val_metrics, indent=4), encoding="utf-8"
-            )
+            (out_dir / "best_val_metrics.json").write_text(json.dumps(val_metrics, indent=4), encoding="utf-8")
+            save_classification_report_txt(val_metrics["classification_report"],
+                                           out_dir / "best_val_classification_report.txt")
 
         else:
             bad_epochs += 1
@@ -412,8 +442,18 @@ def main() -> int:
     if (out_dir / "best_model").exists():
         model = AutoModelForSequenceClassification.from_pretrained(out_dir / "best_model").to(device)
     test_metrics, y_true, y_pred, probs = evaluate(model, test_loader, device, id2label)
+
     (out_dir / "test_metrics.json").write_text(json.dumps(test_metrics, indent=4), encoding="utf-8")
-    save_confusion_matrix_csv(np.array(test_metrics["confusion_matrix"]), id2label, out_dir / "confusion_matrix.csv")
+
+    # Save test classification report as a readable .txt
+    save_classification_report_txt(
+        test_metrics["classification_report"],
+        out_dir / "test_classification_report.txt",
+    )
+
+    # Save confusion matrix
+    cm = np.array(test_metrics["confusion_matrix"])
+    save_confusion_matrix_heatmap(cm, id2label, out_dir / "confusion_matrix.png", title="Test Confusion Matrix")
 
     logger.info("Final TEST | acc=%.6f | macro_f1=%.6f", test_metrics["accuracy"], test_metrics["macro_f1"])
     wandb.log({"test/accuracy": test_metrics["accuracy"], "test/macro_f1": test_metrics["macro_f1"]})
@@ -422,5 +462,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    # os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+    os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     raise SystemExit(main())
