@@ -1,0 +1,18 @@
+python src/train.py \
+--data-dir dataset/splits \
+--save-dir runs \
+--run-name test_run \
+--run-description sample \
+--model-name "google/mobilebert-uncased" \
+--max-length 32 \
+--batch-size 64 \
+--eval-batch-size 128 \
+--lr 1e-4 \
+--weight-decay 0.001 \
+--epochs 2 \
+--cosine-eta-min 1e-12 \
+--use-class-weights \
+--early-stopping-patience 10 \
+--metric-for-best "macro_f1" \
+--seed 43 \
+--num-workers 4
