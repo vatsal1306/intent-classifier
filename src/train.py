@@ -55,7 +55,6 @@ class TrainConfig:
     lr: float = 2e-5
     weight_decay: float = 0.01
     epochs: int = 8
-    cosine_tmax: int = 8
     cosine_eta_min: float = 1e-6
     label_smoothing: float = 0.0
     use_class_weights: bool = True
@@ -183,8 +182,8 @@ def save_confusion_matrix_csv(cm: np.ndarray, id2label: Dict[int, str], out_path
 # -----------------------------------
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-dir", type=str, default="data/splits")
-    parser.add_argument("--artifacts-dir", type=str, default="artifacts")
+    parser.add_argument("--data-dir", type=str, default="dataset/splits")
+    parser.add_argument("--save-dir", type=str, default="runs")
     parser.add_argument("--run-name", type=str, default=None)
     parser.add_argument("--run-description", type=str, default="")
     parser.add_argument("--model-name", type=str, default="google/mobilebert-uncased")
@@ -194,7 +193,6 @@ def main() -> int:
     parser.add_argument("--lr", type=float, default=2e-5)
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--epochs", type=int, default=8)
-    parser.add_argument("--cosine-tmax", type=int, default=8)
     parser.add_argument("--cosine-eta-min", type=float, default=1e-6)
     parser.add_argument("--use-class-weights", action="store_true")
     parser.add_argument("--early-stopping-patience", type=int, default=2)
@@ -206,7 +204,6 @@ def main() -> int:
     )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num-workers", type=int, default=2)
-    parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -219,7 +216,6 @@ def main() -> int:
         lr=args.lr,
         weight_decay=args.weight_decay,
         epochs=args.epochs,
-        cosine_tmax=args.cosine_tmax,
         cosine_eta_min=args.cosine_eta_min,
         use_class_weights=args.use_class_weights,
         early_stopping_patience=args.early_stopping_patience,
@@ -313,12 +309,12 @@ def main() -> int:
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=cfg.cosine_tmax, eta_min=cfg.cosine_eta_min
+        optimizer, T_max=cfg.epochs, eta_min=cfg.cosine_eta_min
     )
 
     # Artifacts dir
     run_name = args.run_name or time.strftime("%Y%m%d_%H%M%S")
-    out_dir = Path(args.artifacts_dir) / run_name
+    out_dir = Path(args.save_dir) / run_name
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Save config file
