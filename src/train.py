@@ -65,6 +65,7 @@ class TrainConfig:
     metric_for_best: str = "accuracy"  # "accuracy" or "macro_f1"
     seed: int = 42
     num_workers: int = 2
+    save_latest_every: int = 5
 
 
 # -----------------------------------
@@ -226,14 +227,11 @@ def main() -> int:
     parser.add_argument("--cosine-eta-min", type=float, default=1e-6)
     parser.add_argument("--use-class-weights", action="store_true")
     parser.add_argument("--early-stopping-patience", type=int, default=2)
-    parser.add_argument(
-        "--metric-for-best",
-        type=str,
-        default="accuracy",
-        choices=["accuracy", "macro_f1"],
-    )
+    parser.add_argument("--metric-for-best", type=str, default="accuracy", choices=["accuracy", "macro_f1"])
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num-workers", type=int, default=2)
+    parser.add_argument("--save-ckpt-every", type=int, default=5,
+                        help="Save latest model every N epochs (set 1 to save every epoch; set 0 to disable periodic saves).")
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -252,6 +250,7 @@ def main() -> int:
         metric_for_best=args.metric_for_best,
         seed=args.seed,
         num_workers=args.num_workers,
+        save_latest_every=args.save_ckpt_every,
     )
 
     data_dir = Path(args.data_dir)
@@ -404,11 +403,12 @@ def main() -> int:
             }
         )
 
-        # Save latest model
-        latest_dir = out_dir / f"latest_model_epoch_{epoch}"
-        latest_dir.mkdir(parents=True, exist_ok=True)
-        model.save_pretrained(latest_dir)
-        tokenizer.save_pretrained(latest_dir)
+        # Save latest model every N epochs (and optionally disable with 0)
+        if cfg.save_latest_every > 0 and (epoch % cfg.save_latest_every == 0):
+            latest_dir = out_dir / f"latest_model_epoch_{epoch}"
+            latest_dir.mkdir(parents=True, exist_ok=True)
+            model.save_pretrained(latest_dir)
+            tokenizer.save_pretrained(latest_dir)
 
         # Evaluate & decide best
         current_val = get_current_metric(val_metrics)
@@ -437,6 +437,12 @@ def main() -> int:
                     best_metric,
                 )
                 break
+
+    # Always save the final model of the run as "latest_model_final"
+    final_dir = out_dir / "latest_model_final"
+    final_dir.mkdir(parents=True, exist_ok=True)
+    model.save_pretrained(final_dir)
+    tokenizer.save_pretrained(final_dir)
 
     # Final test evaluation
     if (out_dir / "best_model").exists():

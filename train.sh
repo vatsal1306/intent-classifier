@@ -1,18 +1,19 @@
 python -m src.train \
 --data-dir dataset/splits \
 --save-dir runs \
---run-name test_run \
---run-description sample \
+--run-name first_run \
+--run-description "First run" \
 --model-name "google/mobilebert-uncased" \
 --max-length 32 \
---batch-size 64 \
+--batch-size 256 \
 --eval-batch-size 128 \
 --lr 1e-4 \
 --weight-decay 0.001 \
---epochs 2 \
+--epochs 500 \
 --cosine-eta-min 1e-12 \
 --use-class-weights \
---early-stopping-patience 10 \
+--early-stopping-patience 30 \
 --metric-for-best "macro_f1" \
 --seed 43 \
---num-workers 4
+--num-workers 4 \
+--save-ckpt-every 50
