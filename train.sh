@@ -1,8 +1,8 @@
 python -m src.train \
 --data-dir dataset/splits \
 --save-dir runs \
---run-name first_run \
---run-description "First run" \
+--run-name first_run_epochs \
+--run-description "First run tracking epochs on X-axis" \
 --model-name "google/mobilebert-uncased" \
 --max-length 32 \
 --batch-size 256 \
