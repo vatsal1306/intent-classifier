@@ -1,0 +1,19 @@
+3.10
+    model_name: str = "google/mobilebert-uncased"
+    run name
+    run desc
+    data dir
+    max_length: int = 32
+    batch_size: int = 64
+    eval_batch_size: int = 256
+    lr: float = 2e-5
+    weight_decay: float = 0.01
+    epochs: int = 8
+    cosine_tmax: int = 8
+    cosine_eta_min: float = 1e-6
+    -label_smoothing: float = 0.0
+    use_class_weights: bool = True
+    early_stopping_patience: int = 2
+    metric_for_best: str = "accuracy"  # "accuracy" or "macro_f1"
+    seed: int = 42
+    num_workers: int = 2
