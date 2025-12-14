@@ -352,6 +352,11 @@ def main() -> int:
     # W&B Init
     wandb.init(project="intent-classification", config=asdict(cfg), mode='online', name=run_name,
                notes=args.run_description)
+    wandb.define_metric("epoch")
+    wandb.define_metric("train/*", step_metric="epoch")
+    wandb.define_metric("val/*", step_metric="epoch")
+    wandb.define_metric("test/*", step_metric="epoch")
+    wandb.define_metric("lr", step_metric="epoch")
     # wandb.watch(model, log="all", log_freq=100)
 
     best_metric = -1.0
@@ -400,7 +405,7 @@ def main() -> int:
                 "val/macro_f1": val_metrics["macro_f1"],
                 "lr": scheduler.get_last_lr()[0],
                 "epoch": epoch,
-            }
+            }, step=epoch
         )
 
         # Save latest model every N epochs (and optionally disable with 0)
@@ -462,7 +467,14 @@ def main() -> int:
     save_confusion_matrix_heatmap(cm, id2label, out_dir / "confusion_matrix.png", title="Test Confusion Matrix")
 
     logger.info("Final TEST | acc=%.6f | macro_f1=%.6f", test_metrics["accuracy"], test_metrics["macro_f1"])
-    wandb.log({"test/accuracy": test_metrics["accuracy"], "test/macro_f1": test_metrics["macro_f1"]})
+    wandb.log(
+        {
+            "test/accuracy": test_metrics["accuracy"],
+            "test/macro_f1": test_metrics["macro_f1"],
+            "epoch": best_epoch,
+        },
+        step=best_epoch,
+    )
 
     return 0
 
