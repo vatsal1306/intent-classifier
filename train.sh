@@ -1,4 +1,4 @@
-python src/train.py \
+python -m src/train.py \
 --data-dir dataset/splits \
 --save-dir runs \
 --run-name test_run \
