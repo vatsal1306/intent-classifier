@@ -10,4 +10,5 @@ python -m src.inference \
 python -m src.inference \
 --ckpt runs/first_run_epochs/best_model \
 --data-csv dataset/processed/infer_data.csv \
---out-csv runs/first_run_epochs/infer_data.csv
+--out-csv runs/first_run_epochs/infer_data.csv \
+--batch-size 512

@@ -8,12 +8,14 @@ python -m src.inference --ckpt runs/<run>/best_model --data-csv new_queries.csv
 from __future__ import annotations
 
 import argparse
+import math
 from pathlib import Path
 from typing import List, Dict, Any
 
 import numpy as np
 import pandas as pd
 import torch
+from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from src.utils import clean_text_for_model
@@ -29,11 +31,15 @@ def softmax_np(logits: np.ndarray) -> np.ndarray:
 def predict_all(model, tokenizer, texts: List[str], device: torch.device, max_length: int, batch_size: int = 256):
     model.eval()
     probs_out = []
-    for i in range(0, len(texts), batch_size):
+    total_batches = math.ceil(len(texts) / batch_size)
+
+    for i in tqdm(range(0, len(texts), batch_size), total=total_batches, desc="Inference", unit="batch"):
         batch = texts[i: i + batch_size]
         enc = tokenizer(batch, truncation=True, max_length=max_length, padding=True, return_tensors="pt").to(device)
+
         logits = model(**enc).logits.detach().cpu().numpy()
         probs_out.append(softmax_np(logits))
+
     return np.vstack(probs_out)
 
 
