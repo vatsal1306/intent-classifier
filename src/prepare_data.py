@@ -17,30 +17,19 @@ import math
 import re
 import unicodedata
 from dataclasses import dataclass
-from src.Logging import logger
 from pathlib import Path
 from typing import Dict, Tuple
 
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit
 
+from src.Logging import logger
+from src.utils import normalize_whitespace, clean_text_for_model
 
 LABEL_CANONICAL_MAP = {
     "product query": "product",
     "outfit idea query": "outfit",
 }
-
-
-def normalize_whitespace(text: str) -> str:
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
-
-
-def clean_text_for_model(text: str) -> str:
-    # Keep meaning; just normalize unicode + whitespace.
-    text = unicodedata.normalize("NFKC", str(text))
-    return normalize_whitespace(text)
 
 
 def normalize_for_grouping(text: str, group_digits: bool = True) -> str:
@@ -216,7 +205,8 @@ def group_aware_train_val_test_split(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=str, default='dataset/processed/search_queries_july_2025.csv', help="Path to labeled CSV")
+    parser.add_argument("--input", type=str, default='dataset/processed/search_queries_july_2025.csv',
+                        help="Path to labeled CSV")
     parser.add_argument("--outdir", type=str, default="dataset/splits", help="Output directory")
     parser.add_argument("--text-col", type=str, default=None, help="Optional explicit text column name")
     parser.add_argument("--label-col", type=str, default=None, help="Optional explicit label column name")
