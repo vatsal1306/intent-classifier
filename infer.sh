@@ -1,9 +1,9 @@
-# list all incorrect predictions
-python -m src.inference \
---ckpt runs/first_run_epochs/best_model \
---data-csv dataset/splits/test.csv \
---out-csv runs/first_run_epochs/misclassified_test.csv \
---labeled
+## list all incorrect predictions
+#python -m src.inference \
+#--ckpt runs/first_run_epochs/best_model \
+#--data-csv dataset/splits/test.csv \
+#--out-csv runs/first_run_epochs/misclassified_test.csv \
+#--labeled
 
 
 # inference on unlabelled infer data
