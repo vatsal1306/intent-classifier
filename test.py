@@ -14,7 +14,7 @@ print(f"Count of Grape Prompted Query: {tmp_df['Query Type'].value_counts().get(
 print(f"Count of Mixed: {tmp_df['Query Type'].value_counts().get('Mixed', 0)}")
 
 # keep only outfit and product rows
-filtered_df = tmp_df[tmp_df['Query Type'].isin(['Outfit Idea Query', 'Product Query'])]
-print(f"Number of samples after filtering: {len(filtered_df)}")
+# filtered_df = tmp_df[tmp_df['Query Type'].isin(['Outfit Idea Query', 'Product Query'])]
+# print(f"Number of samples after filtering: {len(filtered_df)}")
 
-filtered_df.to_csv('dataset/processed/search_queries_july_2025.csv', index=False)
+# filtered_df.to_csv('dataset/processed/search_queries_july_2025.csv', index=False)
